@@ -1,5 +1,7 @@
 # PortScan 
 
+JRE 1.7 or 1.8 required
+
 Help :
  
 Usage: java com.jp.PortScanPlus [host] [startPort] [endPort] 
