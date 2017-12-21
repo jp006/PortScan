@@ -46,7 +46,7 @@ public class PortScanPlus {
 		          }
 		          br.close();
 		          }
-		          catch(SocketTimeoutException ex)
+		          catch(Exception ex)
 		          {}
 		          
 		           socket.close();

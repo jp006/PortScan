@@ -52,7 +52,7 @@ public class ParallelPortScan {
 		          String WAS = "";
 		          Socket socket = new Socket();
 		          socket.connect(new InetSocketAddress(ip, port), timeout);
-		          socket.setSoTimeout(1000);
+		          socket.setSoTimeout(5000);
 		          boolean HTTP = false;
 		          try
 		          {
@@ -74,7 +74,7 @@ public class ParallelPortScan {
 		          }
 		          br.close();
 		          }
-		          catch(SocketTimeoutException ex)
+		          catch(Exception ex)
 		          {}
 		          
 		           socket.close();
@@ -112,7 +112,7 @@ public class ParallelPortScan {
 			          SSLSocket sslSocket = 
 			        	      (SSLSocket)factory.createSocket();
 			          sslSocket.connect(new InetSocketAddress(ip, port), timeout);
-			          sslSocket.setSoTimeout(1000);
+			          sslSocket.setSoTimeout(5000);
 			          //printSocketInfo(sslSocket);
 			          sslSocket.startHandshake();
 			          javax.security.cert.X509Certificate[] certificates = sslSocket.getSession().getPeerCertificateChain();
@@ -125,7 +125,7 @@ public class ParallelPortScan {
 			        	  return ""+port;	  
 		        	  
 		          } catch (Exception ex) { 
-		        	  //System.out.print(ex);
+		        	  // System.out.print(ex);
 		        		  return ""+port+ " "+ (HTTP?"HTTP":"") + " " + WAS;  
 		        	  }
 		          }
@@ -186,7 +186,7 @@ public class ParallelPortScan {
 		URL url = new URL("https://"+hostname+":"+port+"/admin");
 		URLConnection con = url.openConnection();
 		con.setConnectTimeout(1000);
-		con.setReadTimeout(1000);
+		con.setReadTimeout(5000);
 		Reader reader = new InputStreamReader(con.getInputStream());
 		StringBuffer output = new StringBuffer();
 		while (true) {
@@ -199,7 +199,7 @@ public class ParallelPortScan {
 		
 		}
 		//System.out.println(output);
-		if (output.indexOf("username") != -1)
+		if ((output.indexOf("username") != -1) || (output.indexOf("User ID") != -1) )
 		{
 			//System.out.println(output);
 			return true;
