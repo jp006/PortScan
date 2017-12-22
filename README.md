@@ -2,6 +2,9 @@
 
 JRE 1.7 or 1.8 required
 
+To compile :
+javac com/jp/PorScanPlus.java
+
 Help :
  
 Usage: java com.jp.PortScanPlus  [parallel] [sslinfo] [host] [startPort] [endPort] 
