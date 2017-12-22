@@ -4,28 +4,27 @@ JRE 1.7 or 1.8 required
 
 Help :
  
-Usage: java com.jp.PortScanPlus [host] [startPort] [endPort] 
+Usage: java com.jp.PortScanPlus  [parallel] [sslinfo] [host] [startPort] [endPort] 
 
-Usage: java com.jp.ParallelPortScan [host] [startPort] [endPort] 
 
 
 Examples of commands :  
 
 To perform a sequential scan 
 ```
-    java com.jp.PortScanPlus localhost 
-    java com.jp.PortScanPlus www.google.com 443 443 
+    java com.jp.PortScanPlus 0 0 localhost 
+    java com.jp.PortScanPlus 0 0 www.google.com 443 443 
 ```
 
 To perform a parallel scan 
 ```
-    java com.jp.ParallelPortScan localhost 
-    java com.jp.ParallelPortScan www.google.com 443 443 
+    java com.jp.PortScanPlus 1 0 localhost 
+    java com.jp.PortScanPlus 1 0 www.google.com 443 443 
 ```
 
 Example of execution :
 ```
-java com.jp.PortScanPlus localhost
+java com.jp.PortScanPlus 0 0 localhost
 Scanning host localhost
 22  
 25  
