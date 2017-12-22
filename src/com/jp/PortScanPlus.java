@@ -2,9 +2,12 @@ package com.jp;
 
 import java.net.*;  
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.io.*;  
 
@@ -18,7 +21,20 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 public class PortScanPlus {  
 	
-	public static String portIsOpen(final String ip, final int port, final int timeout) {
+	public static Future<String> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout, final int SSLinfo) {
+		  return es.submit(new Callable<String>() {
+		      @Override public String call() {
+		    	  try {
+		    		  return portIsOpen(ip, port, timeout, SSLinfo);
+		    	  }
+		      
+		      catch(Exception ex)
+		          { return "";}
+		      
+		      } });
+		  }
+		      
+	public static String portIsOpen(final String ip, final int port, final int timeout, final int SSLinfo) {
 		
 		        try {
 		          String WAS = "";
@@ -85,16 +101,16 @@ public class PortScanPlus {
 			        	      (SSLSocket)factory.createSocket();
 			          sslSocket.connect(new InetSocketAddress(ip, port), timeout);
 			          sslSocket.setSoTimeout(1000);
-			          //printSocketInfo(sslSocket);
+			          
 			          sslSocket.startHandshake();
+			          if (SSLinfo == 1) printSocketInfo(sslSocket);
 			          javax.security.cert.X509Certificate[] certificates = sslSocket.getSession().getPeerCertificateChain();
 			          Date expiration = certificates[0].getNotAfter();
 			          //System.out.println(certificates.length);
 			          sslSocket.close();
-			          if (true)
+
 			           return ""+port+ " SSL "+ expiration + " " + WAS;
-			          else 
-			        	  return ""+port;	  
+  
 		        	  
 		          } catch (Exception ex) { 
 		        	  //System.out.print(ex);
@@ -189,25 +205,33 @@ public class PortScanPlus {
     public static void main(String[] args) throws IOException {  
         InetAddress host = InetAddress.getLocalHost();  
         int startPort = 1;  
+        int parallel = 0;
+        int SSLinfo = 0;
         int endPort = 65535;
         long startTime = System.currentTimeMillis();
         long endtTime;
         int timeout = 1000;
         switch (args.length) {  
+        case 5 :  
+            endPort = Integer.parseInt(args[4]);  
+        // Fall thru  
+        case 4 :  
+            startPort = Integer.parseInt(args[3]);  
+        // Fall thru  
         case 3 :  
-            endPort = Integer.parseInt(args[2]);  
+            host = InetAddress.getByName(args[2]);  
         // Fall thru  
         case 2 :  
-            startPort = Integer.parseInt(args[1]);  
-        // Fall thru  
+            SSLinfo = Integer.parseInt(args[1]);
+            // Fall thru    
         case 1 :  
-            host = InetAddress.getByName(args[0]);  
-        // Fall thru  
+            parallel = Integer.parseInt(args[0]);
+            // Fall thru
         case 0 :  
             break;  
         default :  
             System.err.println(  
-                "Usage: java PortScan [host] [startPort] [endPort]");  
+                "Usage: java PortScan [parallel] [sslinfo] [host] [startPort] [endPort]");  
             System.exit(1);  
         }  
         if (startPort < 0 || startPort > 65535 ||  
@@ -215,15 +239,51 @@ public class PortScanPlus {
             throw new IllegalArgumentException(  
                           "PortScan: invalid port number");  
         }  
-        System.out.println("Scanning host " + host.getHostName());  
+        System.out.println("Scanning host " + host.getHostName());
+        
+        // if option of parallelism is false
+        int openPorts = 0;
+        if (parallel == 0)
+        {
         for (int i = startPort; i <= endPort; i++) {  
              String out = "";
-            out = portIsOpen(host.getHostName(),i,timeout);
+            out = portIsOpen(host.getHostName(),i,timeout, SSLinfo);
             if (!out.equals("")) 
-             System.out.println(out); 
+            {
+             System.out.println(out);
+             openPorts++;
+            }
       //      System.out.println("open");  
-        }  
+        }
+        }
+        else
+        {
+        	final ExecutorService es = Executors.newFixedThreadPool(120);
+            
+       	 final ArrayList<Future<String>> futures = new ArrayList<>();
+       	 for (int port = startPort; port <= endPort; port++) { 
+       	    futures.add(portIsOpen(es, host.getHostName(), port, timeout, SSLinfo));
+       	  }
+       	  es.shutdown();
+       	 
+       	  
+       	  for (final Future<String> f : futures) {
+       	    try {
+					if (f.get() != "") {
+					  openPorts++;
+					  System.out.println("Port number " + f.get());
+					  
+					}
+				} catch (InterruptedException | ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+       	  }
+       	  
+       	
+        }
         endtTime =  System.currentTimeMillis();
-        System.out.println("Duration : " + (endtTime - startTime));
+        System.out.println("There are " + openPorts + " open ports on host " + host + " (probed with a timeout of " + timeout + "ms)"); 
+        System.out.println("Duration : " + (endtTime - startTime) + "ms");
     }  
 }  
